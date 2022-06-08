@@ -8,6 +8,8 @@ Per eseguire il presente codice è necessario utilizzare o una Command Prompt o 
 import socket as sk
 import sys
 
+#TODO wrapper per indirizzi IP
+
 clientsocket = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
 
 host = "localhost"
@@ -19,7 +21,7 @@ except Exception as data:
     print (Exception,":",data)
     print ("Ritenta sarai più fortunato.\r\n")
     sys.exit(0)
-clientsocket.send(message.encode()) #se tutto è andato bene, rispondiamo al servere con un 200 OK
+clientsocket.send(message.encode()) 
 print(message.encode())   
 response = clientsocket.recv(1024)
     

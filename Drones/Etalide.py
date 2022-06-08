@@ -7,11 +7,15 @@ G.Pau - A. Piroddi
 import socket as sk
 import time
 
+
+Etalide_IP = "192.168.1.1"
+
+
 # Creiamo il socket
 sock = sk.socket(sk.AF_INET, sk.SOCK_DGRAM)
 
 # associamo il socket alla porta
-server_address = ('localhost', 12000)
+server_address = ('localhost', 12001)
 print ('\n\rstarting up on %s port %s' % server_address)
 sock.bind(server_address)
 
@@ -24,7 +28,7 @@ while True:
     
     
     if data:
-        data1="Etalide is online"
+        data1="available"
         time.sleep(2)
         sent = sock.sendto(data1.encode(), address)
         print ('sent %s bytes back to %s' % (sent, address))
