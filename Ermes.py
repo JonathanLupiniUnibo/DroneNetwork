@@ -1,19 +1,13 @@
-import sys
-from socket import * 
+from socket import *
+import threading
 import time
 
-#TODO dizionario con indirizzi 
-# Wrapper ip
+client_facing_port = 10000
+drone_facing_port = 12000
+router_client_socket = socket(AF_INET, SOCK_STREAM)
+router_client_socket.bind(("localhost", client_facing_port))
 
-connected_drones = 0;
-max_drones = 3;
-
-Etalide_Status = "unavailable"
-Erito_Status = "unavailable"
-Eudoro_Status = "unavailable"
-
-Drone_Facing_IP = "192.168.1.0"
-Client_Facing_IP = "10.10.10.1"
+Etalide = False;
 
 DroneToIp = {
     "Etalide" : "192.168.1.1",
@@ -27,40 +21,50 @@ IpToPort = {
         "192.168.1.3": 120003
     }
 
+DroneStatus = {
+    "Etalide" : False,
+    "Erito" : False,
+    "Eudoro" : False
+    }
 
-def droneHandler():
-    def __init__(self,drone_adress,drone_socket):
-      threading.Thread.__init__(self)
-      self.csocket = drone_socket
-      print ("New connection added: ", drone_adress)
-    def run(self):
-      print ("Connection from : ", drone_adress)
-      #self.csocket.send(bytes("Hi, This is from Server..",'utf-8'))
-      msg = ''
-      while True:
-          data = self.csocket.recv(2048)
-          msg = data.decode()
-          if msg=='bye':
-            break
-          print ("from client", msg)
-          self.csocket.send(bytes(msg,'UTF-8'))
-      print ("Client at ", drone_adress , " disconnected...")
+print ('the router is up on port:',client_facing_port)
 
-# clientHandler()
-# droneHandler()
+router_client_socket.listen(0);
 
-server_drone_socket = socket(AF_INET, SOCK_DGRAM)
-drone_address = ('localhost', IpToPort[DroneToIp["Etalide"]])
-server_drone_socket.bind(drone_address)
+while True:
 
-while connected_drones <= max_drones:
-    server_drone_socket.listen(3)
-    drone_socket, drone_adress = server_drone_socket.accept()
-    drone_thread = DroneHandler(drone_adress, drone_socket)
-    drone_thread.start()
-    drone_thread.join()
-    server_drone_socket.close()
-    
-    
-    
+    print ('Ready to serve...')
+    connectionSocket, addr = router_client_socket.accept()
+    print(connectionSocket)
+    print(addr)
+    try:
 
+        message = connectionSocket.recv(1024) ## riceve il messaggio di richiesta dal client
+        drone = message.decode().split()[0]
+        if (drone == "Etalide"):
+            DroneStatus[drone] = not DroneStatus[drone];
+            answer = "Etalide is now "  
+            if (DroneStatus[drone]) :
+                answer = answer + "Available"
+            else :
+                answer = answer + "Unavailable"
+            connectionSocket.send(answer.encode())          
+    except IOError:
+ #Invia messaggio di risposta per file non trovato
+        connectionSocket.send(bytes("HTTP/1.1 404 Not Found\r\n\r\n","UTF-8"))
+        connectionSocket.send(bytes("<html><head></head><body><h1>404 Not Found</h1></body></html>\r\n","UTF-8"))
+        connectionSocket.close()
+router_client_socket.close()
+connectionSocket.close()
+
+
+
+
+def updateClient(Dictionary, socket):
+    message = ""
+    for drone in Dictionary:
+        message = message + drone 
+        if Dictionary[drone]:
+            message = message+" is available "
+        else:
+            message = message+" is unavailable "
