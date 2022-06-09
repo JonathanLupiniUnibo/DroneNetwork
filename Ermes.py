@@ -2,12 +2,13 @@ from socket import *
 import threading
 import time
 
+host = "Localhost"
 client_facing_port = 10000
 drone_facing_port = 12000
 router_client_socket = socket(AF_INET, SOCK_STREAM)
-router_client_socket.bind(("localhost", client_facing_port))
-
-Etalide = False;
+router_client_socket.bind((host, client_facing_port))
+router_drone_socket = socket(AF_INET, SOCK_DGRAM)
+router_drone_socket.bind((host, drone_facing_port))
 
 DroneToIp = {
     "Etalide" : "192.168.1.1",
@@ -22,38 +23,38 @@ IpToPort = {
     }
 
 DroneStatus = {
-    "Etalide" : False,
-    "Erito" : False,
-    "Eudoro" : False
+    "Etalide" : True,
+    "Erito" : True,
+    "Eudoro" : True
     }
 
 print ('the router is up on port:',client_facing_port)
 
 router_client_socket.listen(0);
 
+connectionSocket, addr = router_client_socket.accept()
+print(connectionSocket)
+print(addr)
+
 while True:
 
     print ('Ready to serve...')
-    connectionSocket, addr = router_client_socket.accept()
-    print(connectionSocket)
-    print(addr)
     try:
 
         message = connectionSocket.recv(1024) ## riceve il messaggio di richiesta dal client
         drone = message.decode().split()[0]
-        if (drone == "Etalide"):
+        if drone in DroneStatus:
             DroneStatus[drone] = not DroneStatus[drone];
-            answer = "Etalide is now "  
+            answer = drone + " is "  
             if (DroneStatus[drone]) :
                 answer = answer + "Available"
             else :
                 answer = answer + "Unavailable"
-            connectionSocket.send(answer.encode())          
-    except IOError:
- #Invia messaggio di risposta per file non trovato
-        connectionSocket.send(bytes("HTTP/1.1 404 Not Found\r\n\r\n","UTF-8"))
-        connectionSocket.send(bytes("<html><head></head><body><h1>404 Not Found</h1></body></html>\r\n","UTF-8"))
-        connectionSocket.close()
+            connectionSocket.send(answer.encode())      
+            print(answer)
+    except Exception as error:
+        print (Exception,":",error)
+        print ("Something went wrong\r\n")
 router_client_socket.close()
 connectionSocket.close()
 
