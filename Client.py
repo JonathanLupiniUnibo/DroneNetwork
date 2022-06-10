@@ -30,6 +30,9 @@ def handle_send ():
             clientsocket.send(message.encode())
             endFlag = True
             return
+        elif drone == "update":
+            clear()
+            continue
         address = input("Shipping address: ")
         message = drone+" "+address
         if time.time() - timeBegin >= 20:
