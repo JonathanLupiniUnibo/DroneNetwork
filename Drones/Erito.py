@@ -13,6 +13,7 @@ IpToPort = {
 
 drone_port = 12002
 droneName = "Erito"
+droneAdress = "192.168.1.2"
 
 clientsocket = socket(AF_INET, SOCK_DGRAM)
 clientsocket.bind((host, drone_port))
@@ -30,7 +31,7 @@ while True:
         print ("Package Delivered! Returning to warehouse...")
         time.sleep(roundTrip/2)
         print ("Arrived to warehouse\n")
-        message = droneName + " available"
+        message = droneAdress+" "+ droneName + " available"
         clientsocket.sendto(message.encode(), serverAddress)
     except Exception as info:
         print(info)

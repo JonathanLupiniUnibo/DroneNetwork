@@ -15,7 +15,7 @@ def shutDown():
         address = (host, IpToPort[DroneToIp[drone]])
         router_drone_socket.sendto(message.encode("utf-8"), address)
     endFlag = True
-    time.sleep(1) #giving time to the threads to finish their business
+    time.sleep(2) #giving time to the threads to finish their business
     router_client_socket.close()
     router_drone_socket.close()
     print("Router shutdown")  # client_update_thread si aggiorna ogni 0.1 secondi, non c'è bisogno di chiuderlo
@@ -24,25 +24,30 @@ def shutDown():
 
 def updateClient():
     global endFlag
+    global client_ip
     while True:
         if endFlag == True:
             return
+        if client_ip is None: #parte solo quando è stato fatto almeno un ordine
+            continue
         time.sleep(0.1)
         message = ""
+        # print("Router["+client_facing_ip+"] tells Client["+client_ip+"] that : \n") # comment out for clarity when reading the router console
         for drone in DroneStatus:
             message = message + drone 
             if DroneStatus[drone] == "available":
                 message = message+" is available "
             else:
                 message = message+" is unavailable "
-        connectionSocket.send(message.encode())                
+        connectionSocket.send(message.encode())
+        # print(message+"\n") # comment out for clarity when reading the router console                
                 
 def handleClient():           
     global endFlag
+    global client_ip
     while True:
         if endFlag == True:
             return
-        print ('Waiting for order')
         try:
             message = connectionSocket.recv(1024)
             message = message.decode()
@@ -51,13 +56,17 @@ def handleClient():
                 connectionSocket.send(answer.encode())
                 shutDown()
                 return
-            drone = message.split()[0]
+            drone = message.split()[1]
             if drone in DroneStatus:
                 DroneStatus[drone] = not DroneStatus[drone];
-                address = message.split(' ', 2)[1]
+                ip = message.split()[0]
+                if client_ip is None:
+                    client_ip = ip
+                shippingAddress = ' '.join(message.split()[2:])
                 port = IpToPort[DroneToIp[drone]]
                 target = ("localhost", port)
-                router_drone_socket.sendto(address.encode(), target)
+                print("Client["+ ip+"] wants "+drone+"["+DroneToIp[drone]+"] to deliver to "+ shippingAddress)
+                router_drone_socket.sendto(shippingAddress.encode(), target)
         except Exception as error:
             if endFlag == True:
                 return
@@ -71,15 +80,14 @@ def droneListen():
     while True:
         if endFlag == True:
             return
-        print ("Listening to drones")
         try:
             message, droneAdress = router_drone_socket.recvfrom(1024)
             message = message.decode("utf-8")
-            print("Drone said : "+message)
-            drone = message.split()[0]
-            status = message.split()[1]
+            ip = message.split()[0]
+            drone = message.split()[1]
+            status = message.split()[2]
+            print(drone+"["+ip+"] reports to Router["+drone_facing_ip+"] that it completed the delivery\n")
             DroneStatus[drone] = status;
-            print(DroneStatus[drone])
         except Exception as error:
            if endFlag == True:
                 return
@@ -97,6 +105,8 @@ drone_facing_port = 12000
 client_facing_ip = "10.10.10.01"
 drone_facing_ip = "192.168.1.0"
 
+client_ip = None #aspettiamo la prima interazione col client per scoprire l'ip
+
 router_client_socket = socket(AF_INET, SOCK_STREAM)      # socket per il collegamento client-router
 router_client_socket.bind((host, client_facing_port))
 
@@ -112,7 +122,7 @@ DroneToIp = {
 IpToPort = {
         "192.168.1.1": 12001,
         "192.168.1.2": 12002,
-        "192.168.1.3": 12003
+        "192.168.1.3": 12003,
     }
 
 DroneStatus = {

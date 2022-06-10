@@ -34,7 +34,7 @@ def handle_send ():
             clear()
             continue
         address = input("Shipping address: ")
-        message = drone+" "+address
+        message = client_ip+" "+drone+" "+address
         if time.time() - timeBegin >= 20:
             clear()
             print("Too much time has passed, new Drones might be available")
@@ -63,18 +63,15 @@ def handle_recieve():
         try:
             response = clientsocket.recv(1024)
             response = response.decode("utf-8");
-            # print (response)
             if response == "Ending started":
                 endFlag = True
                 return
             i = 1;
             limit = len(response.split())/3
-            # print("limit : ", limit)
             while i <= limit:
                 target = response.split()[3*(i-1)]
                 status = response.split()[i*3-1]
                 DroneStatus[target] = status
-                # print(target, status, DroneStatus[target])
                 i += 1
         except Exception as error:
             print (Exception,":",error)
@@ -83,9 +80,12 @@ def handle_recieve():
             return
             
 host = "localhost"
+
 router_port = 10000
 router_ip =  "10.10.10.01"
+
 client_port = 8000
+client_ip = "10.10.10.0"
 
 clientsocket = socket(AF_INET, SOCK_STREAM)
 clientsocket.bind((host, client_port))
@@ -105,7 +105,7 @@ try:
     clientsocket.connect((host,RouterPort[router_ip]))
 except Exception as data:
     print (Exception,":",data)
-    print ("Ritenta sarai più fortunato.\r\n")
+    print ("Something went wrong when connecting to the router \r\n")
     clientsocket.close()
     sys.exit(0)   
 
