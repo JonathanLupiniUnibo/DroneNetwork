@@ -11,23 +11,23 @@ endFlag = False
 def clear():
     print("\n" * 50)
     
-def handle_send (socket, ipList, status):
-    time.sleep(1)
+def handle_send ():
     global endFlag
     while True:
+        time.sleep(1)
         if endFlag == True:
             return        
         timeBegin = time.time()
-        for device in status:
+        for device in DroneStatus:
             print(device+" is",end = ' ')
-            if status[device] == True:
+            if DroneStatus[device] == "available":
                 print("available")
             else:
                 print("unavailable")        
         drone = input("Name of the drone: ")
         if drone == "END":
             message = "END"
-            socket.send(message.encode())
+            clientsocket.send(message.encode())
             endFlag = True
             return
         address = input("Shipping address: ")
@@ -40,9 +40,10 @@ def handle_send (socket, ipList, status):
         if len(message.split())<2:
             clear()
             print("Wrong input format")
-        elif ipList.__contains__(drone):
-            if status[drone] == True:
-                socket.send(message.encode())
+        elif DroneToIp.__contains__(drone):
+            print(DroneStatus[drone])
+            if DroneStatus[drone] == "available":
+                clientsocket.send(message.encode())
                 clear()
             else:
                 clear()
@@ -51,21 +52,26 @@ def handle_send (socket, ipList, status):
             clear()
             print ("No such drone exists\r\n")
 
-def handle_recieve(socket, dictionary):
+def handle_recieve():
     global endFlag
     while True:
         if endFlag == True:
             return
         try:
-            response = socket.recv(1024)
+            response = clientsocket.recv(1024)
             response = response.decode("utf-8");
+            # print (response)
             if response == "Ending started":
                 endFlag = True
                 return
             i = 1;
             limit = len(response.split())/3
+            # print("limit : ", limit)
             while i <= limit:
-                dictionary[response.split()[3*(i-1)]] = response.split()[i*3-1]
+                target = response.split()[3*(i-1)]
+                status = response.split()[i*3-1]
+                DroneStatus[target] = status
+                # print(target, status, DroneStatus[target])
                 i += 1
         except Exception as error:
             print (Exception,":",error)
@@ -88,9 +94,9 @@ DroneToIp = {
     }
 
 DroneStatus = {
-    "Etalide" : True,
-    "Erito" : True,
-    "Eudoro" : True
+    "Etalide" : "available",
+    "Erito" : "available",
+    "Eudoro" : "available"
     }
 
 try:
@@ -98,11 +104,12 @@ try:
 except Exception as data:
     print (Exception,":",data)
     print ("Ritenta sarai più fortunato.\r\n")
+    clientsocket.close()
     sys.exit(0)  
 
-send_thread = threading.Thread(target=handle_send, args=(clientsocket, DroneToIp, DroneStatus))
+send_thread = threading.Thread(target=handle_send)
 send_thread.start()
-recieve_thread = threading.Thread(target=handle_recieve(clientsocket, DroneStatus))
+recieve_thread = threading.Thread(target=handle_recieve)
 recieve_thread.start()
 while True:
     time.sleep(1)

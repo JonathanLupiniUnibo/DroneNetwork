@@ -1,12 +1,14 @@
 from socket import *
 import sys
 
-clientsocket = socket(AF_INET, SOCK_DGRAM)
-
 host = "localhost"
-port = 12000
-serverAddressPort =(host, port)
-message = "Erito "+ "True"    
+router_port = 12000
+drone_port = 12001
+
+clientsocket = socket(AF_INET, SOCK_DGRAM)
+clientsocket.bind((host, drone_port))
+serverAddressPort = (host, router_port)
+message = "Erito "+ "available"    
 print(message)
 clientsocket.sendto(str.encode(message), serverAddressPort)
 

@@ -6,14 +6,15 @@ import time
 
 def updateClient():
     while True:
-        time.sleep(5)
+        time.sleep(0.1)
         message = ""
         for drone in DroneStatus:
             message = message + drone 
-            if DroneStatus[drone]:
+            if DroneStatus[drone] == "available":
                 message = message+" is available "
             else:
                 message = message+" is unavailable "
+        connectionSocket.send(message.encode())                
                 
 def handleClient():           
     while True:
@@ -27,15 +28,10 @@ def handleClient():
                 router_drone_socket.close()
                 return
             drone = message.decode().split()[0]
+            print(DroneStatus[drone])
             if drone in DroneStatus:
+                print("hit")
                 DroneStatus[drone] = not DroneStatus[drone];
-                answer = drone + " is "  
-                if (DroneStatus[drone]) :
-                    answer = answer + "Available"
-                else :
-                    answer = answer + "Unavailable"
-                connectionSocket.send(answer.encode())      
-                print(answer)
         except Exception as error:
             print (Exception,":",error)
             print ("Something went wrong when talking to the client\r\n")
@@ -52,10 +48,10 @@ def droneListen():
             print("Drone said : "+message)
             drone = message.split()[0]
             status = message.split()[1]
-            if status == "True":
-                DroneStatus[drone] = False
+            if status == "available":
+                DroneStatus[drone] = "available"
             else:
-                DroneStatus[drone] = True
+                DroneStatus[drone] = "unavailable"
         except Exception as error:
            print (Exception,":",error)
            print ("Something went wrong when listening to drone\r\n")    
@@ -85,9 +81,9 @@ IpToPort = {
     }
 
 DroneStatus = {
-    "Etalide" : True,
-    "Erito" : True,
-    "Eudoro" : True
+    "Etalide" : "available",
+    "Erito" : "available",
+    "Eudoro" : "available"
     }
    
 
@@ -103,6 +99,7 @@ print(connectionSocket)
 print(addr)
 client_thread = threading.Thread(target = handleClient)
 client_thread.start();
+client_update_thread = threading.Thread(target = updateClient())
 
 
 
