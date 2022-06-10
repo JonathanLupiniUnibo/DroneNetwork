@@ -2,14 +2,22 @@ from socket import *
 import sys
 import threading
 import os
+import time
 
 #TODO wrapper per indirizzi IP
+
+endFlag = False
 
 def clear():
     print("\n" * 50)
     
 def handle_send (socket, ipList, status):
+    time.sleep(1)
+    global endFlag
     while True:
+        if endFlag == True:
+            return        
+        timeBegin = time.time()
         for device in status:
             print(device+" is",end = ' ')
             if status[device] == True:
@@ -17,11 +25,21 @@ def handle_send (socket, ipList, status):
             else:
                 print("unavailable")        
         drone = input("Name of the drone: ")
+        if drone == "END":
+            message = "END"
+            socket.send(message.encode())
+            endFlag = True
+            return
         address = input("Shipping address: ")
         message = drone+" "+address
+        if time.time() - timeBegin >= 20:
+            clear()
+            print("Too much time has passed, new Drones might be available")
+            print("")
+            continue
         if len(message.split())<2:
             clear()
-            print("Wrong input format")  
+            print("Wrong input format")
         elif ipList.__contains__(drone):
             if status[drone] == True:
                 socket.send(message.encode())
@@ -34,10 +52,16 @@ def handle_send (socket, ipList, status):
             print ("No such drone exists\r\n")
 
 def handle_recieve(socket, dictionary):
+    global endFlag
     while True:
+        if endFlag == True:
+            return
         try:
             response = socket.recv(1024)
             response = response.decode("utf-8");
+            if response == "Ending started":
+                endFlag = True
+                return
             i = 1;
             limit = len(response.split())/3
             while i <= limit:
@@ -46,6 +70,8 @@ def handle_recieve(socket, dictionary):
         except Exception as error:
             print (Exception,":",error)
             print ("Something went wrong\r\n")
+            endFlag = True
+            return
             
 host = "localhost"
 router_port = 10000
@@ -78,18 +104,14 @@ send_thread = threading.Thread(target=handle_send, args=(clientsocket, DroneToIp
 send_thread.start()
 recieve_thread = threading.Thread(target=handle_recieve(clientsocket, DroneStatus))
 recieve_thread.start()
-# while True:
-#     try:
-#         response = clientsocket.recv(1024)
-#         response = response.decode("utf-8");
-#         i = 1;
-#         limit = len(response.split())/3
-#         while i <= limit:
-#             DroneStatus[response.split()[3*(i-1)]] = response.split()[i*3-1]
-#             i += 1
-#     except Exception as error:
-#         print (Exception,":",error)
-#         print ("Something went wrong\r\n")
+while True:
+    time.sleep(1)
+    if endFlag == True:
+        break
+time.sleep(2)    
+clientsocket.close()
+clear()
+print("Client shutdown")
 
 
 
