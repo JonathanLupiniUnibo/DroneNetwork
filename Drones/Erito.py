@@ -3,7 +3,7 @@ import sys
 
 host = "localhost"
 router_port = 12000
-drone_port = 12001
+drone_port = 12002
 
 clientsocket = socket(AF_INET, SOCK_DGRAM)
 clientsocket.bind((host, drone_port))

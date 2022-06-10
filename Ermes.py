@@ -21,17 +21,22 @@ def handleClient():
         print ('Ready to serve...')
         try:
             message = connectionSocket.recv(1024)
-            if message.decode() == "END":
+            message = message.decode()
+            if message == "END":
                 answer = "Ending started"
                 connectionSocket.send(answer.encode())
                 router_client_socket.close()
                 router_drone_socket.close()
                 return
-            drone = message.decode().split()[0]
-            print(DroneStatus[drone])
+            drone = message.split()[0]
             if drone in DroneStatus:
-                print("hit")
                 DroneStatus[drone] = not DroneStatus[drone];
+                address = message.split(' ', 1)[1]
+                print(address)
+                port = IpToPort[DroneToIp[drone]]
+                print(port)
+                target = ("localhost", port)
+                router_drone_socket.sendto(address.encode(), target)
         except Exception as error:
             print (Exception,":",error)
             print ("Something went wrong when talking to the client\r\n")
