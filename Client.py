@@ -43,7 +43,7 @@ def handle_send ():
         if len(message.split())<2:
             clear()
             print("Wrong input format")
-        elif DroneToIp.__contains__(drone):
+        elif DroneStatus.__contains__(drone):
             print(DroneStatus[drone])
             if DroneStatus[drone] == "available":
                 clientsocket.send(message.encode())
@@ -84,16 +84,15 @@ def handle_recieve():
             
 host = "localhost"
 router_port = 10000
+router_ip =  "10.10.10.01"
 client_port = 8000
 
 clientsocket = socket(AF_INET, SOCK_STREAM)
 clientsocket.bind((host, client_port))
 
 
-DroneToIp = {
-    "Etalide" : "192.168.1.1",
-    "Erito" : "192.168.1.2",
-    "Eudoro" : "192.168.1.3"
+RouterPort = {
+        "10.10.10.01" : router_port
     }
 
 DroneStatus = {
@@ -103,12 +102,12 @@ DroneStatus = {
     }
 
 try:
-    clientsocket.connect((host,router_port))
+    clientsocket.connect((host,RouterPort[router_ip]))
 except Exception as data:
     print (Exception,":",data)
     print ("Ritenta sarai più fortunato.\r\n")
     clientsocket.close()
-    sys.exit(0)  
+    sys.exit(0)   
 
 send_thread = threading.Thread(target=handle_send)
 send_thread.start()
