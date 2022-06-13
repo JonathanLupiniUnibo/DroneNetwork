@@ -18,6 +18,7 @@ droneAdress = "192.168.1.1"
 clientsocket = socket(AF_INET, SOCK_DGRAM)
 clientsocket.bind((host, drone_port))
 serverAddress = (host, IpToPort[router_ip]) # simula una connessione su un'interfaccia diversa dal loopback
+
 while True:
     try:
         roundTrip = random.randint(4, 10)

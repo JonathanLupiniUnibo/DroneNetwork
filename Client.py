@@ -14,16 +14,28 @@ def clear():
 def handle_send ():
     global endFlag
     while True:
-        time.sleep(1)
+        time.sleep(1) # serve a dare il tempo al router di mandare la lista aggiornata di droni disponibili
         if endFlag == True:
             return        
         timeBegin = time.time()
         for device in DroneStatus:
+<<<<<<< HEAD
             print(device+" is",end = ' ')
             if DroneStatus[device] == "available":
                 print("available")
             else:
                 print("unavailable")        
+=======
+            if DroneStatus[device] is None:
+                break
+            allConnected = True
+        if allConnected == False:
+            clear()
+            print("Not all drones are connected")
+            continue
+        for device in DroneStatus:
+            print(device+" is "+DroneStatus[device])
+>>>>>>> 8f1dbd2 (removed todo)
         drone = input("Name of the drone: ")
         if drone == "END":
             message = "END"
@@ -44,7 +56,6 @@ def handle_send ():
             clear()
             print("Wrong input format")
         elif DroneStatus.__contains__(drone):
-            print(DroneStatus[drone])
             if DroneStatus[drone] == "available":
                 clientsocket.send(message.encode())
                 clear()
@@ -55,7 +66,7 @@ def handle_send ():
             clear()
             print ("No such drone exists\r\n")
 
-def handle_recieve():
+def handle_receive():
     global endFlag
     while True:
         if endFlag == True:
@@ -111,8 +122,8 @@ except Exception as data:
 
 send_thread = threading.Thread(target=handle_send)
 send_thread.start()
-recieve_thread = threading.Thread(target=handle_recieve)
-recieve_thread.start()
+receive_thread = threading.Thread(target=handle_receive)
+receive_thread.start()
 while True:
     time.sleep(1)
     if endFlag == True:
