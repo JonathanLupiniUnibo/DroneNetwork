@@ -6,6 +6,8 @@ import sys
 #netstat -ano|findstr 10000
 
 endFlag = False
+allConnected = False
+
 
 def shutDown():
     global endFlag
@@ -25,6 +27,14 @@ def shutDown():
 def updateClient():
     global endFlag
     global client_ip
+    global allConnected
+    while allConnected == False:
+        time.sleep(1)
+    print("Client is now available\n")
+    message = ""
+    for drone in DroneStatus:
+        message = message + drone+ " is " + DroneStatus[drone]+ " "
+    connectionSocket.send(message.encode())    
     while True:
         if endFlag == True:
             return
@@ -34,11 +44,7 @@ def updateClient():
         message = ""
         # print("Router["+client_facing_ip+"] tells Client["+client_ip+"] that : \n") # comment out for clarity when reading the router console
         for drone in DroneStatus:
-            message = message + drone 
-            if DroneStatus[drone] == "available":
-                message = message+" is available "
-            else:
-                message = message+" is unavailable "
+            message = message + drone+ " is " + DroneStatus[drone]+ " "
         connectionSocket.send(message.encode())
         # print(message+"\n") # comment out for clarity when reading the router console                
                 
@@ -58,7 +64,7 @@ def handleClient():
                 return
             drone = message.split()[1]
             if drone in DroneStatus:
-                DroneStatus[drone] = not DroneStatus[drone];
+                DroneStatus[drone] = "unavailable";
                 ip = message.split()[0]
                 if client_ip is None:
                     client_ip = ip
@@ -77,6 +83,20 @@ def handleClient():
             
 def droneListen():
     global endFlag
+    global allConnected
+    
+    while allConnected == False:
+        print("\n" * 50)
+        print("Waiting for all drones to connect")
+        message, droneAddress = router_drone_socket.recvfrom(1024)
+        message = message.decode("utf-8")
+        if message in DroneStatus:
+            DroneStatus[message] = "available"
+            allConnected = True
+            for device in DroneStatus:
+                if DroneStatus[device] is None:
+                    allConnected = False
+        print("All drones connected\n")            
     while True:
         if endFlag == True:
             return
@@ -126,9 +146,9 @@ IpToPort = {
     }
 
 DroneStatus = {
-    "Etalide" : "available",
-    "Erito" : "available",
-    "Eudoro" : "available"
+    "Etalide" : None,
+    "Erito" : None,
+    "Eudoro" : None
     }
    
 

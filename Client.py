@@ -7,35 +7,34 @@ import time
 #TODO wrapper per indirizzi IP
 
 endFlag = False
+allConnected = False
 
 def clear():
     print("\n" * 50)
     
 def handle_send ():
     global endFlag
+    global allConnected
     while True:
         time.sleep(1) # serve a dare il tempo al router di mandare la lista aggiornata di droni disponibili
         if endFlag == True:
             return        
         timeBegin = time.time()
         for device in DroneStatus:
-<<<<<<< HEAD
-            print(device+" is",end = ' ')
-            if DroneStatus[device] == "available":
-                print("available")
-            else:
-                print("unavailable")        
-=======
             if DroneStatus[device] is None:
                 break
             allConnected = True
+            clear()
         if allConnected == False:
             clear()
             print("Not all drones are connected")
             continue
         for device in DroneStatus:
-            print(device+" is "+DroneStatus[device])
->>>>>>> 8f1dbd2 (removed todo)
+            print(device+" is",end = ' ')
+            if DroneStatus[device] == "available":
+                print("available")
+            else:
+                print("unavailable")        
         drone = input("Name of the drone: ")
         if drone == "END":
             message = "END"
@@ -107,9 +106,9 @@ RouterPort = {
     }
 
 DroneStatus = {
-    "Etalide" : "available",
-    "Erito" : "available",
-    "Eudoro" : "available"
+    "Etalide" : None,
+    "Erito" : None,
+    "Eudoro" : None
     }
 
 try:
